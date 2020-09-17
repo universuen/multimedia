@@ -3,7 +3,7 @@ import numpy as np
 
 
 class Handler:
-    def __init__(self, path:str):
+    def __init__(self, path: str):
         # 存储图片路径，方便后续使用
         self.path = path
 
@@ -12,10 +12,10 @@ class Handler:
             # 读取文件头并按照BMP协议对文件头进行字节解析
             header = struct.unpack("<2sI2H4I2H6I", f.read(0x36))
             # 将文件头中的信息存储到实例中
-            self.rgb_offset = header[4]    # RGB偏移量(byte)
+            self.rgb_offset = header[4]  # RGB偏移量(byte)
 
     # 将字符串string嵌入当前图片，并将结果存储到dst
-    def embed(self, string:str, dst:str):
+    def embed(self, string: str, dst: str):
         # 计算需要修改的像素长度
         pixel_len = 3 * (len(string) + 1)
 
@@ -77,12 +77,12 @@ class Handler:
         return result
 
 
-def Embed(src:str, string:str, dst:str):
+def Embed(src: str, string: str, dst: str):
     handler = Handler(src)
     handler.embed(string, dst)
 
 
-def Extract(src:str):
+def Extract(src: str):
     handler = Handler(src)
     print(handler.extract())
 

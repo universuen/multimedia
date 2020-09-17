@@ -1,8 +1,8 @@
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
 
 
+# 计算颜色分布并绘制颜色直方图（可选）
 def calc_histogram(img, hist_size:int = 256, show:bool = False):
     color = ["blue", "green", "red"]
     result = list()
