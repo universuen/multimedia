@@ -82,11 +82,11 @@ def Embed(src:str, string:str, dst:str):
     handler.embed(string, dst)
 
 
-def Extrac(src:str):
+def Extract(src:str):
     handler = Handler(src)
     print(handler.extract())
 
 
 if __name__ == '__main__':
     Embed("image.bmp", "This is a test.", "new_img.bmp")
-    Extrac("new_img.bmp")
+    Extract("new_img.bmp")
