@@ -3,11 +3,12 @@ import cv2
 import matplotlib.pyplot as plt
 import os
 
+
 def compress(img_path, rate):
     """
     :param img_path: 图片存放路径
     :param rate: 压缩率
-    :return: None
+    :return: 压缩用时
     """
     start_time = time.perf_counter() # 压缩开始时间
 
