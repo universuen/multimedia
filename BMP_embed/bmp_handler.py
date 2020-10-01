@@ -11,20 +11,20 @@ class Handler:
         with open(self.path, "rb") as f:
             # 读取文件头并按照BMP协议对文件头进行字节解析
             header = struct.unpack("<2sI2H4I2H6I", f.read(0x36))
-            # 将文件头中的信息存储到实例中
-            self.rgb_offset = header[4]  # RGB偏移量(byte)
+            # 从header中提取图片的rgb偏移量
+            self.rgb_offset = header[4]
 
     # 将字符串string嵌入当前图片，并将结果存储到dst
     def embed(self, string: str, dst: str):
-        # 计算需要修改的像素长度
-        pixel_len = 3 * (len(string) + 1)
+        # 计算需要修改的数据长度
+        data_len = 3 * (len(string) + 1)
 
         # 读取原图片
         with open(self.path, "rb") as f:
             # 暂存头部信息
             former = f.read(self.rgb_offset)
             # 读取一定长度的RGB并转化为二维矩阵
-            rgb_bytes = f.read(pixel_len)
+            rgb_bytes = f.read(data_len)
             rgb_list = array.array('B', rgb_bytes).tolist()
             rgb_matrix = np.reshape(np.array(rgb_list), (-1, 3))
             # 暂存结尾信息
@@ -75,18 +75,3 @@ class Handler:
         for i in embed_code:
             result += chr(i)
         return result
-
-
-def Embed(src: str, string: str, dst: str):
-    handler = Handler(src)
-    handler.embed(string, dst)
-
-
-def Extract(src: str):
-    handler = Handler(src)
-    print(handler.extract())
-
-
-if __name__ == '__main__':
-    Embed("image.bmp", "This is a test.", "new_img.bmp")
-    Extract("new_img.bmp")

@@ -1,2 +1,6 @@
 numpy==1.19.2
 Pillow==7.2.0
+
+opencv-python~=4.4.0.42
+matplotlib~=3.3.2
+tqdm~=4.50.0
