@@ -30,9 +30,8 @@ for i in tqdm(counter.keys()):
 
 # 计算每一类的查全率和查准率
 for i in counter.keys():
-    tp = counter[i][0]
-    fn = counter[i][1]
-    fp = counter[i][2]
+    tp, fn, fp = counter[i]
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     print("针对{}的查准率为{}, 查全率为{}".format(i, precision, recall))
+
