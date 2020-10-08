@@ -102,59 +102,59 @@ plt.plot(classes, results["HSV"][1], color='b', linestyle="--", label="HSV recal
 plt.legend()
 plt.show()
 plt.cla()
-#
-#
-# # 计算不同参考图片数下的查准率和查全率
-# vc = VotingClassifier("seg_train", "RGB")
-# x = [i for i in range(5, 101, 5)]
-# results = {
-#     "buildings": [list(), list()],
-#     "forest": [list(), list()],
-#     "glacier": [list(), list()],
-#     "mountain": [list(), list()],
-#     "sea": [list(), list()],
-#     "street": [list(), list()]
-# }
-# for vote_count in tqdm(x):
-#     # 重置结果计数器 [TP, FN, FP]
-#     counter = {
-#         "buildings": [0, 0, 0],
-#         "forest": [0, 0, 0],
-#         "glacier": [0, 0, 0],
-#         "mountain": [0, 0, 0],
-#         "sea": [0, 0, 0],
-#         "street": [0, 0, 0],
-#     }
-#     # 对测试集中的每一张图片的类别进行预测并统计结果
-#     path = "seg_test"
-#     for i in counter.keys():
-#         dir_path = path + '\\' + i
-#         filenames = os.listdir(dir_path)
-#         for j in filenames:
-#             file_path = dir_path + "\\" + j
-#             pred = vc.predict(file_path, vote_count)
-#             if pred == i:
-#                 counter[i][0] += 1
-#             else:
-#                 counter[i][1] += 1
-#                 counter[pred][2] += 1
-#     # 计算每一类的查全率和查准率
-#     for i in counter.keys():
-#         tp, fn, fp = counter[i]
-#         precision = tp / (tp + fp)
-#         recall = tp / (tp + fn)
-#         results[i][0].append(precision)
-#         results[i][1].append(recall)
-# # 展示结果
-# import matplotlib.pyplot as plt
-# for i in results.keys():
-#     plt.plot(x, results[i][0], label=i)
-# plt.title("precision")
-# plt.legend()
-# plt.show()
-# plt.cla()
-# for i in results.keys():
-#     plt.plot(x, results[i][1], label=i)
-# plt.title("recall")
-# plt.legend()
-# plt.show()
+
+
+# 计算不同参考图片数下的查准率和查全率
+vc = VotingClassifier("seg_train", "RGB")
+x = [i for i in range(5, 101, 5)]
+results = {
+    "buildings": [list(), list()],
+    "forest": [list(), list()],
+    "glacier": [list(), list()],
+    "mountain": [list(), list()],
+    "sea": [list(), list()],
+    "street": [list(), list()]
+}
+for vote_count in tqdm(x):
+    # 重置结果计数器 [TP, FN, FP]
+    counter = {
+        "buildings": [0, 0, 0],
+        "forest": [0, 0, 0],
+        "glacier": [0, 0, 0],
+        "mountain": [0, 0, 0],
+        "sea": [0, 0, 0],
+        "street": [0, 0, 0],
+    }
+    # 对测试集中的每一张图片的类别进行预测并统计结果
+    path = "seg_test"
+    for i in counter.keys():
+        dir_path = path + '\\' + i
+        filenames = os.listdir(dir_path)
+        for j in filenames:
+            file_path = dir_path + "\\" + j
+            pred = vc.predict(file_path, vote_count)
+            if pred == i:
+                counter[i][0] += 1
+            else:
+                counter[i][1] += 1
+                counter[pred][2] += 1
+    # 计算每一类的查全率和查准率
+    for i in counter.keys():
+        tp, fn, fp = counter[i]
+        precision = tp / (tp + fp)
+        recall = tp / (tp + fn)
+        results[i][0].append(precision)
+        results[i][1].append(recall)
+# 展示结果
+import matplotlib.pyplot as plt
+for i in results.keys():
+    plt.plot(x, results[i][0], label=i)
+plt.title("precision")
+plt.legend()
+plt.show()
+plt.cla()
+for i in results.keys():
+    plt.plot(x, results[i][1], label=i)
+plt.title("recall")
+plt.legend()
+plt.show()
