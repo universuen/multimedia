@@ -30,7 +30,7 @@ if __name__ == '__main__':
     plt.ylabel("cost time")
 
     # 尝试不同压缩率并计算压缩时间
-    for i in range(100):
+    for i in range(70, 100):
         rate = i / 100
         print(rate)
         x.append(rate)
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         # 为了减小偶然误差，对每个压缩率计时100次取平均值
         sum = 0
         for j in range(100):
-            t = compress("image.jpg", rate)
+            t = compress("1602530138915.jpg", rate)
             sum += t
         y.append(sum / 100)
 

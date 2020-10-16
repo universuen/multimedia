@@ -2,11 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
-# 读入灰度图片并记录其规格
-image = cv2.imread("image_1.jpg", cv2.IMREAD_GRAYSCALE)
-M, N = image.shape
+# 构建图片
+M = 256
+N = 256
+image = np.zeros([M, N])
+box = np.ones([64, 64])
+image[97:161, 97:161] = box
 
-# 显示原图片
+# 显示图片
 plt.imshow(image, cmap="gray")
 plt.axis("off")
 plt.show()
@@ -31,17 +34,13 @@ for i in range(M):
     for j in range(N):
         UVw = (U[i][j]*U[i][j] + V[i][j]*V[i][j])/(u0*u0)
         H[i][j] = 1/(1 + UVw*UVw)
+H = np.fft.fftshift(H)
 
-# 显示将零频分量移至频谱中心后的滤波器频谱
-plt.imshow(np.fft.fftshift(H), cmap="gray")
+# 显示滤波器频谱
+plt.imshow(H, cmap="gray")
 plt.axis("off")
 plt.show()
 
-# 对原图像进行滤波并做傅里叶逆变换
-G = H*F
-g = np.real(np.fft.ifft2(G))
-
-# 显示滤波后的图片
-plt.imshow(g, cmap="gray")
-plt.axis("off")
-plt.show()
+from filter.ppt import Filter
+f = Filter(image)
+f.apply(H)
