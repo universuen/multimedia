@@ -91,10 +91,7 @@ def _adjust_color(img_a, img_b):
     rate = np.mean(hsv_a[:, :, 2]) / np.mean(hsv_b[:, :, 2])
     hsv_b = hsv_b.astype("float64")
     print(rate)
-    if rate > 1:
-        rate *= 0.92
-    else:
-        rate *= 1.12
+    rate *= 1.12
     hsv_b[:, :, 2] *= rate
     hsv_b[:, :, 2][hsv_b[:, :, 2] > 255] = 255
     hsv_b = hsv_b.astype("uint8")
@@ -121,6 +118,17 @@ def _random_color():
 
 # 显示关键点连线
 def _show_matches(image_a, image_b, keypoints_a, keypoints_b, matches):
+    # gray_img_a = cv2.cvtColor(image_a, cv2.COLOR_BGR2GRAY)
+    # gray_img_b = cv2.cvtColor(image_b, cv2.COLOR_BGR2GRAY)
+    result_a, result_b = None, None
+    result_a = cv2.drawKeypoints(image_a, keypoints_a, result_a, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    result_b = cv2.drawKeypoints(image_b, keypoints_b, result_b, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    result_a = cv2.cvtColor(result_a, cv2.COLOR_BGR2RGB)
+    result_b = cv2.cvtColor(result_b, cv2.COLOR_BGR2RGB)
+    plt.imshow(result_a)
+    plt.show()
+    plt.imshow(result_b)
+    plt.show()
     height_a, width_a = image_a.shape[:2]
     height_b, width_b = image_b.shape[:2]
     result = np.zeros([max(height_a, height_b), width_a + width_b, 3], dtype="uint8")
@@ -130,9 +138,9 @@ def _show_matches(image_a, image_b, keypoints_a, keypoints_b, matches):
         point_a = (int(keypoints_a[i].pt[0]), int(keypoints_a[i].pt[1]))
         point_b = (int(keypoints_b[j].pt[0]) + width_a, int(keypoints_b[j].pt[1]))
         color = _random_color()
-        cv2.circle(result, point_a, 10, color, 10)
-        cv2.circle(result, point_b, 10, color, 10)
-        cv2.line(result, point_a, point_b, color, 10)
+        cv2.circle(result, point_a, 2, color, 2)
+        cv2.circle(result, point_b, 2, color, 2)
+        cv2.line(result, point_a, point_b, color, 2)
     result = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
     plt.imshow(result)
     plt.show()
@@ -150,7 +158,7 @@ def _move(image):
             offset.append(i)
             break
     for i in range(image.shape[1]):
-        if not np.all(image[i] == 0):
+        if not np.all(image[:, i] == 0):
             offset.append(i)
             break
     for i in range(image.shape[1] - 1, -1, -1):
@@ -162,12 +170,11 @@ def _move(image):
 
 
 # 分析图片，返回其关键点和描述符
-def _analyze(image):  # -> keypoints, descriptors
+def _analyze(image):
     gray_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     sift = cv2.SIFT_create()
-    result = sift.detectAndCompute(gray_img, None)
-    del sift
-    return result
+    keypoints, descriptors = sift.detectAndCompute(gray_img, None)
+    return keypoints, descriptors
 
 
 # 根据输入的关键点和描述符计算单应性矩阵
@@ -178,7 +185,7 @@ def _match(keypoints_b, descriptors_b, keypoints_a, descriptors_a):
     matches = flann.knnMatch(descriptors_a, descriptors_b, k=2)
     good_matches = []
     for i, (m, n) in enumerate(matches):
-        if m.distance < 0.5 * n.distance:
+        if m.distance < 1 * n.distance:
             good_matches.append((m.trainIdx, m.queryIdx))
     if len(good_matches) > 4:
         good_keypoints_a = np.float32([keypoints_a[i].pt for (_, i) in good_matches])
@@ -204,6 +211,10 @@ class Stitcher:
             print("Cylindrical projecting {}...".format(i))
             self.images.append(image)
             self.num += 1
+        #     plt.subplot(1, 3, self.num)
+        #     plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        #     plt.axis('off')
+        # plt.show()
         # 曝光补偿
         for i in range(1, len(self.images)):
             self.images[i - 1], self.images[i] = _adjust_color(self.images[i - 1], self.images[i])
@@ -215,8 +226,8 @@ class Stitcher:
     def stitch(self):
         # 缝合所有图片
         result = self.images[0]
-        cnt = 0
-        for image in self.images:
+        cnt = -1
+        for image in self.images[1:]:
             cnt += 1
             print("Stitching {} of {}:".format(cnt, self.num))
             result = self._stitch_two(result, image)
@@ -248,6 +259,8 @@ class Stitcher:
         dimension_size = (int(end[0]) + offset_x + img_b.shape[1], int(end[1]) + offset_y + img_b.shape[0])
         print("\tStitching...")
         wrapped_a = cv2.warpPerspective(img_a, inverse_homography, dimension_size)
+        # plt.imshow(cv2.cvtColor(wrapped_a, cv2.COLOR_BGR2RGB))
+        # plt.show()
         # result[offset_y:offset_y + img_b.shape[0], offset_x:offset_x + img_b.shape[1]] = img_b
         result = _blend(wrapped_a, img_b, offset_x, offset_y)
         # result = self._diffusion(result, img_b, offset_x, offset_y)
@@ -262,6 +275,6 @@ if __name__ == '__main__':
     result = stitcher.stitch()
     plt.imshow(result)
     plt.show()
-    cv2.create
+    # cv2.create
     # cv2.imshow("Result", result)
     # cv2.waitKey()

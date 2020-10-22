@@ -1,0 +1,3 @@
+C:\Users\SOBER\PycharmProjects\multimedia\image_stitch\images\IMG_20201021_184005.jpg
+C:\Users\SOBER\PycharmProjects\multimedia\image_stitch\images\IMG_20201021_184008.jpg
+C:\Users\SOBER\PycharmProjects\multimedia\image_stitch\images\IMG_20201021_184011.jpg
