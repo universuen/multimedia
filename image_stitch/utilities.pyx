@@ -2,6 +2,7 @@ import numpy as np
 from libc.math cimport tan, atan, cos, pi
 cimport cython
 
+# 对的传入图片作柱面投影
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def cylindrical_project(unsigned char[:, :, :]image):
@@ -28,6 +29,7 @@ def cylindrical_project(unsigned char[:, :, :]image):
                 result[y, x, :] = image[point_y, point_x, :]
     return np.array(np.resize(result, (rows, cols, 3)))
 
+# 根据偏移量拼接两幅图片
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def blend(unsigned char[:, :, :]img_1, unsigned char[:, :, :]img_2, int offset_x, int offset_y):

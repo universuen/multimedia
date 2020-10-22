@@ -6,86 +6,8 @@ from utilities import cylindrical_project, blend
 import matplotlib.pyplot as plt
 
 
-# # 获得图片的高斯金字塔
-# def _gaussian_pyramid(image):
-#     _G = image
-#     gp = [_G]
-#     for _ in range(6):
-#         _G = cv2.pyrDown(_G)
-#         gp.append(_G)
-#     return gp
-#
-#
-# # 调整两幅图像至相同大小
-# def _same_size(img_a, img_b):
-#     shape = (min(img_a.shape[1], img_b.shape[1]), min(img_a.shape[0], img_b.shape[0]))
-#     img_a = cv2.resize(img_a, shape)
-#     img_b = cv2.resize(img_b, shape)
-#     return img_a, img_b
-#
-#
-# # 根据高斯金字塔获得图片的拉普拉斯金字塔
-# def _laplacian_pyramid(gp):
-#     lp = [gp[5]]
-#     for i in range(5, 0, -1):
-#         _GE = cv2.pyrUp(gp[i])
-#         img_a, img_b = _same_size(gp[i - 1], _GE)
-#         _L = cv2.subtract(img_a, img_b)
-#         lp.append(_L)
-#     return lp
-#
-#
-# def _diffusion(image, offset_x, offset_y):
-#     # 根据offset_x和offset_y对image进行切割
-#     img_a = image[:offset_x]
-#     img_b = image[offset_x:]
-#     # 生成img_a和img_b的的高斯金字塔
-#     gp_a = _gaussian_pyramid(img_a)
-#     gp_b = _gaussian_pyramid(img_b)
-#     # 根据高斯金字塔生成拉普拉斯金字塔
-#     lp_a = _laplacian_pyramid(gp_a)
-#     lp_b = _laplacian_pyramid(gp_b)
-#     # 融合两个拉普拉斯金字塔
-#     image_lp = list()
-#     for i, j in zip(lp_a, lp_b):
-#         layer = np.zeros((i.shape[0]+j.shape[0], i.shape[1], 3), dtype="uint8")
-#         layer[:i.shape[0]] = i
-#         layer[i.shape[0]:i.shape[0]+j.shape[0]] = j
-#         image_lp.append(layer)
-#     # 根据拉普拉斯金字塔重建图片
-#     image = image_lp[0]
-#     for i in range(1, 6):
-#         image = cv2.pyrUp(image)
-#         img_a, img_b = _same_size(image, image_lp[i])
-#         image = cv2.add(img_a, img_b)
-#
-#     # 根据offset_y对image进行纵向切割
-#     img_a = image[:, :offset_y]
-#     img_b = image[:, offset_y:]
-#     # 生成img_a和img_b的的高斯金字塔
-#     gp_a = _gaussian_pyramid(img_a)
-#     gp_b = _gaussian_pyramid(img_b)
-#     # 根据高斯金字塔生成拉普拉斯金字塔
-#     lp_a = _laplacian_pyramid(gp_a)
-#     lp_b = _laplacian_pyramid(gp_b)
-#     # 融合两个拉普拉斯金字塔
-#     image_lp = list()
-#     for i, j in zip(lp_a, lp_b):
-#         layer = np.zeros((i.shape[0], i.shape[1] + j.shape[1], 3), dtype="uint8")
-#         layer[:, :i.shape[1]] = i
-#         layer[:, i.shape[1]:i.shape[1] + j.shape[1]] = j
-#         image_lp.append(layer)
-#     # 根据拉普拉斯金字塔重建图片
-#     image = image_lp[0]
-#     for i in range(1, 6):
-#         image = cv2.pyrUp(image)
-#         img_a, img_b = _same_size(image, image_lp[i])
-#         image = cv2.add(img_a, img_b)
-#     return image
-
-
-# 曝光均衡
-def _adjust_color(img_a, img_b):
+# 亮度均衡
+def _adjust_brightness(img_a, img_b):
     hsv_a = cv2.cvtColor(img_a, cv2.COLOR_BGR2HSV)
     hsv_b = cv2.cvtColor(img_b, cv2.COLOR_BGR2HSV)
     rate = np.mean(hsv_a[:, :, 2]) / np.mean(hsv_b[:, :, 2])
@@ -116,11 +38,10 @@ def _random_color():
     return b, g, r
 
 
-# 显示关键点连线
+# 展示关键点匹配结果
 def _show_matches(image_a, image_b, keypoints_a, keypoints_b, matches):
-    # gray_img_a = cv2.cvtColor(image_a, cv2.COLOR_BGR2GRAY)
-    # gray_img_b = cv2.cvtColor(image_b, cv2.COLOR_BGR2GRAY)
     result_a, result_b = None, None
+    # 画出两张图的关键点
     result_a = cv2.drawKeypoints(image_a, keypoints_a, result_a, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     result_b = cv2.drawKeypoints(image_b, keypoints_b, result_b, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     result_a = cv2.cvtColor(result_a, cv2.COLOR_BGR2RGB)
@@ -129,6 +50,7 @@ def _show_matches(image_a, image_b, keypoints_a, keypoints_b, matches):
     plt.show()
     plt.imshow(result_b)
     plt.show()
+    # 画出关键点连线
     height_a, width_a = image_a.shape[:2]
     height_b, width_b = image_b.shape[:2]
     result = np.zeros([max(height_a, height_b), width_a + width_b, 3], dtype="uint8")
@@ -177,7 +99,7 @@ def _analyze(image):
     return keypoints, descriptors
 
 
-# 根据输入的关键点和描述符计算单应性矩阵
+# 根据输入的关键点和描述符计算单应性矩阵和优质匹配组合
 def _match(keypoints_b, descriptors_b, keypoints_a, descriptors_a):
     index_params = dict(algorithm=0, trees=5)
     search_params = dict(checks=100)  # or pass empty dictionary
@@ -197,13 +119,12 @@ def _match(keypoints_b, descriptors_b, keypoints_a, descriptors_a):
 
 
 class Stitcher:
-    def __init__(self, path, ratio=0.5, debug=False):
-        self.ratio = ratio
+    def __init__(self, path, debug=False):
         self.debug = debug
         self.images = list()
+        # 从传入的path读取目录下所有图片
         filenames = os.listdir(path)
         self.num = 0
-        # 读取所有图片
         for i in filenames:
             file_path = path + "\\" + i
             image = cv2.imread(file_path)
@@ -211,42 +132,39 @@ class Stitcher:
             print("Cylindrical projecting {}...".format(i))
             self.images.append(image)
             self.num += 1
-        #     plt.subplot(1, 3, self.num)
-        #     plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        #     plt.axis('off')
-        # plt.show()
-        # 曝光补偿
+        # 亮度均衡
         for i in range(1, len(self.images)):
-            self.images[i - 1], self.images[i] = _adjust_color(self.images[i - 1], self.images[i])
+            self.images[i - 1], self.images[i] = _adjust_brightness(self.images[i - 1], self.images[i])
         # 柱面投影
         for i in range(len(self.images)):
             self.images[i] = _cylindrical_project(self.images[i])
 
-    # 逐个缝合所有图片
+    # 两两缝合所有图片
     def stitch(self):
-        # 缝合所有图片
         result = self.images[0]
-        cnt = -1
+        cnt = 1
         for image in self.images[1:]:
             cnt += 1
             print("Stitching {} of {}:".format(cnt, self.num))
             result = self._stitch_two(result, image)
+        # 将结果由BGR转换为RGB
         result = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
         return result
 
     # 缝合两张相邻图片
     def _stitch_two(self, img_a, img_b):
+        # 获取img_a的关键点和描述符
         print("\tAnalyzing image A...")
         keypoints_a, descriptors_a = _analyze(img_a)
-
+        # 获取img_b的关键点和描述符
         print("\tAnalyzing image B...")
         keypoints_b, descriptors_b = _analyze(img_b)
-
+        # 根据关键点和描述符计算单应性矩阵
         print("\tCalculating homography...")
         homography, matches = _match(keypoints_a, descriptors_a, keypoints_b, descriptors_b)
         if self.debug:
             _show_matches(img_a, img_b, keypoints_a, keypoints_b, matches)
-
+        # 计算单应性矩阵的逆矩阵，使参考视角从img_a转为img_b
         print("\tCalculating offset...")
         inverse_homography = np.linalg.inv(homography)
         start = np.dot(inverse_homography, np.array([0, 0, 1]))
@@ -258,14 +176,12 @@ class Stitcher:
         offset_y = abs(int(start[1]))
         dimension_size = (int(end[0]) + offset_x + img_b.shape[1], int(end[1]) + offset_y + img_b.shape[0])
         print("\tStitching...")
+        # 对img_a作透视变换
         wrapped_a = cv2.warpPerspective(img_a, inverse_homography, dimension_size)
-        # plt.imshow(cv2.cvtColor(wrapped_a, cv2.COLOR_BGR2RGB))
-        # plt.show()
-        # result[offset_y:offset_y + img_b.shape[0], offset_x:offset_x + img_b.shape[1]] = img_b
+        # 拼接img_b和透视变换后的img_a
         result = _blend(wrapped_a, img_b, offset_x, offset_y)
-        # result = self._diffusion(result, img_b, offset_x, offset_y)
+        # 调整拼接后图像的位置，删去空白部分
         result = _move(result)
-        # result = _diffusion(result, offset_x, offset_y)
         print("\tDone!")
         return result
 
@@ -275,6 +191,3 @@ if __name__ == '__main__':
     result = stitcher.stitch()
     plt.imshow(result)
     plt.show()
-    # cv2.create
-    # cv2.imshow("Result", result)
-    # cv2.waitKey()
